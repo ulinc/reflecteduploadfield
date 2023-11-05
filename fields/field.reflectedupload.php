@@ -107,7 +107,8 @@ class FieldReflectedUpload extends FieldUpload
         $fields = array();
         $fields['field_id'] = $id;
         $fields['destination'] = $this->get('destination');
-        $fields['validator'] = ($fields['validator'] == 'custom' ? NULL : $this->get('validator'));
+        // Use $this->get('validator') instead of $fields['validator']
+        $fields['validator'] = ($this->get('validator') == 'custom' ? NULL : $this->get('validator'));
         $fields['expression'] = $this->get('expression');
         $fields['unique'] = $this->get('unique');
         $fields['unique'] = ($this->get('unique') ? 1 : 0);
