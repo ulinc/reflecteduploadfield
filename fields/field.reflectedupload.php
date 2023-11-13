@@ -278,42 +278,55 @@ class FieldReflectedUpload extends FieldUpload
         $entry_xml = new XMLElement('entry');
         $section_id = $entry->get('section_id');
         $data = $entry->getData();
-        $fields = array();
-        $entry_xml->setAttribute('id' , $entry->get('id'));
-
+        $entry_xml->setAttribute('id', $entry->get('id'));
+    
         $associated = $entry->fetchAllAssociatedEntryCounts();
-
+    
         if (is_array($associated) and !empty($associated)) {
             foreach ($associated as $section => $count) {
-                $handle = Symphony::Database()->fetchVar('handle' , 0 , "
+                $handleQuery = "
                     SELECT s.handle FROM `tbl_sections` AS s
                     WHERE s.id = '{$section}'
                     LIMIT 1
-                    ");
-                $entry_xml->setAttribute($handle , (string)$count);
+                ";
+                $handle = Symphony::Database()->fetchVar('handle', 0, $handleQuery);
+    
+                // Ensure $handle is a string
+                if (!is_string($handle)) {
+                    // Handle the error or assign a default value
+                    // For example, log the error or use a default handle
+                    continue; // Skip this iteration
+                }
+    
+                // Convert $count to a string or number appropriately
+                if (is_array($count)) {
+                    $count = count($count);
+                }
+    
+                $entry_xml->setAttribute($handle, (string)$count);
             }
         }
-
+    
         // Add fields:
         foreach ($data as $field_id => $values) {
             if (empty($field_id)) continue;
             $fm = new FieldManager($entry);
             $field =& $fm->fetch($field_id);
-            $field->appendFormattedElement($entry_xml , $values , false , null);
+            $field->appendFormattedElement($entry_xml, $values, false, null);
         }
-
+    
         $xml = new XMLElement('data');
         $xml->appendChild($entry_xml);
         $dom = new DOMDocument();
         $dom->strictErrorChecking = false;
         $dom->loadXML($xml->generate(true));
-
+    
         $xpath = new DOMXPath($dom);
-
-        if (version_compare(phpversion() , '5.3' , '>=')) {
+    
+        if (version_compare(phpversion(), '5.3', '>=')) {
             $xpath->registerPhpFunctions();
         }
-
+    
         return $xpath;
     }
 
